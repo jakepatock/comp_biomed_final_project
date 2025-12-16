@@ -1,0 +1,30 @@
+{
+    "linear": {
+        "model_type": "Lasso",
+        "alpha": 0.0060020139725666935,
+        "fit_intercept": false
+    },
+    "svr": {
+        "C": 2.737688946135858,
+        "tol": 0.0004374995554310012,
+        "epsilon": 0.49940271360773275
+    },
+    "rf": {
+        "n_estimators": 800,
+        "max_depth": 27,
+        "min_samples_split": 4,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt"
+    },
+    "xgb": {
+        "n_estimators": 600,
+        "max_depth": 4,
+        "learning_rate": 0.029504450169365978,
+        "reg_alpha": 3.20215012501137,
+        "reg_lambda": 2.6912463631714305e-06,
+        "min_child_weight": 2.404887457281237,
+        "gamma": 0.8417448789053628,
+        "subsample": 0.6192621493425784,
+        "colsample_bytree": 0.8246226388408825
+    }
+}

@@ -1,0 +1,37 @@
+{
+    "logistic": {
+        "solver": "lbfgs",
+        "tol": 0.004530668152430395,
+        "C": 18.617690493237717,
+        "fit_intercept": true,
+        "class_weight": "balanced",
+        "warm_start": true
+    },
+    "svc": {
+        "C": 0.43275931145921254,
+        "tol": 0.0005718449562366564,
+        "class_weight": "balanced"
+    },
+    "rf": {
+        "n_estimators": 1000,
+        "criterion": "entropy",
+        "max_depth": 33,
+        "min_samples_split": 3,
+        "min_samples_leaf": 1,
+        "max_features": "sqrt",
+        "bootstrap": false,
+        "class_weight": null
+    },
+    "xgb": {
+        "n_estimators": 1000,
+        "max_depth": 27,
+        "learning_rate": 0.011725754007544944,
+        "reg_alpha": 9.661557132290499,
+        "reg_lambda": 0.10002973341313702,
+        "min_child_weight": 6.139266646805275,
+        "gamma": 0.13086082866693616,
+        "subsample": 0.637757477893238,
+        "colsample_bytree": 0.7336846423173035,
+        "class_weight": "balanced"
+    }
+}

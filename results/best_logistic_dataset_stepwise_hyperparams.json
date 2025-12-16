@@ -1,0 +1,30 @@
+{
+    "linear": {
+        "model_type": "Ridge",
+        "alpha": 11.726433358893951,
+        "fit_intercept": false
+    },
+    "svr": {
+        "C": 1.8658557034618812,
+        "tol": 0.0004806938118223248,
+        "epsilon": 0.6232533425371507
+    },
+    "rf": {
+        "n_estimators": 950,
+        "max_depth": 32,
+        "min_samples_split": 3,
+        "min_samples_leaf": 2,
+        "max_features": "sqrt"
+    },
+    "xgb": {
+        "n_estimators": 950,
+        "max_depth": 22,
+        "learning_rate": 0.006427835737274775,
+        "reg_alpha": 1.9145657555333935e-07,
+        "reg_lambda": 3.897070708365775,
+        "min_child_weight": 9.154437183764184,
+        "gamma": 0.9081389799400955,
+        "subsample": 0.7655166298249081,
+        "colsample_bytree": 0.710134660135249
+    }
+}

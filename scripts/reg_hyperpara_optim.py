@@ -1,3 +1,11 @@
+"""This is the regression workflow script that transforms the preprocessed dataset to machine readable, splits the data, performs TPE cross-validation, and test the final models
+This file takes on parameter called --reg_dataset
+There parameter has two possible argumetns "long" and "short"
+"long" performs the long regression task pipeline from Hempel et al. (1 < LOS < 21)
+"short" performs the short regression task pipeline from Hempel et al. (1 < LOS < 4)
+"""
+
+
 # Standard library
 import argparse
 import ast
@@ -62,19 +70,24 @@ def setup_logger(saving_dir):
     ))
     logging.getLogger().addHandler(console_handler)
 
+# Maping a vector of numbers to multi-hot count vector 
 def to_multihot(chapters, size=23):
+    # Init size 
     vec = np.zeros(size, dtype=int)
 
+    # Counting how many of each int are in the input 
     for idx in range(size):
         vec[idx] = chapters.count(idx)
     return vec
 
+# Combining rare columns with highly imbalcned features to one
 def merge_rare_onehots(df, rare_dict):
     for new_col, rare_list in rare_dict.items():
         df[new_col] = df[rare_list].max(axis=1)
         df.drop(columns=rare_list, inplace=True)
     return df
 
+# Preprocessing pipeline 
 def preprocess_dataset(dataset):
     # Label Encoder for M and F 
     label_encoder = LabelEncoder()
@@ -133,6 +146,7 @@ def preprocess_dataset(dataset):
 
     return dataset, classification_labels, reg_labels 
 
+# Regression Cross valdiadtion function
 def reg_cross_val(model, input_features, reg_labels, n_folds):
     # Init the folds
     cv_folds = KFold(n_splits=n_folds, shuffle=True, random_state=seed)
@@ -169,6 +183,7 @@ def reg_cross_val(model, input_features, reg_labels, n_folds):
         # Predict the labels 
         scaled_val_preds = model.predict(scaled_val_input)
 
+        # Unscale preds 
         unscaled_val_preds = label_scaler.inverse_transform(scaled_val_preds.reshape(-1, 1)).flatten()
 
         # Calculating Evaluation Metrics 
@@ -341,31 +356,38 @@ def xgb_objective(trial, input_features, reg_labels):
     return metrics["rmse"]
 
 if __name__ == '__main__':
+    # Getting args 
     parser = argparse.ArgumentParser(description="Training script example")
     parser.add_argument("--reg_dataset", type=str, required=True)
     args = parser.parse_args()
 
-    # init seed
+    # Init seed
     global seed
     seed = 0
 
+    # Config paths and logger
     repo_dir = Path(__file__).parent.parent
-    dataset_dir = os.path.join(repo_dir, 'improved_dataset')
+    dataset_dir = os.path.join(repo_dir, 'dataset')
     results_dir = os.path.join(repo_dir, 'results')
     setup_logger(repo_dir)
 
+    # Reading in dataset and shuffle 
     dataset = pd.read_csv(os.path.join(dataset_dir, 'mean_dataset.csv'))
     dataset = dataset.sample(frac=1, random_state=seed).reset_index(drop=True)
 
+    # Map to machine readable input 
     dataset, cls_labels, reg_labels  = preprocess_dataset(dataset)
 
+    # Extracting short LOS is arg is passed 
     if args.reg_dataset == 'short':
         dataset = dataset[cls_labels == 0]
         reg_labels = reg_labels[cls_labels == 0]
         cls_labels = cls_labels[cls_labels == 0]
+    # Else doing long 
     else:
         pass
 
+    # Spliting the dataset 
     train_input_df, test_input_df, train_cls_df, test_cls_df, train_reg_df, test_reg_df = train_test_split(dataset, 
                                                                                                             cls_labels, 
                                                                                                             reg_labels, 
@@ -373,20 +395,25 @@ if __name__ == '__main__':
                                                                                                             random_state=seed,
                                                                                                             stratify=cls_labels.values)
 
+    # TPE trails num 
     n_trials = 128
 
+    # Linear model optimization
     linear_objective = partial(linear_objective, input_features=train_input_df.values, reg_labels=train_reg_df.values)
     linear_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
     linear_study.optimize(linear_objective, n_trials=n_trials)
 
+    # SVR model optimization
     svr_objective = partial(svr_objective, input_features=train_input_df.values, reg_labels=train_reg_df.values)
     svr_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
     svr_study.optimize(svr_objective, n_trials=n_trials)
 
+    # RF model optimization
     rf_objective = partial(rf_objective, input_features=train_input_df.values, reg_labels=train_reg_df.values)
     rf_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
     rf_study.optimize(rf_objective, n_trials=n_trials)
 
+    # XGB model optimization
     xgb_objective = partial(xgb_objective, input_features=train_input_df.values, reg_labels=train_reg_df.values)
     xbg_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
     xbg_study.optimize(xgb_objective, n_trials=n_trials)

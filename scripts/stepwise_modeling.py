@@ -189,20 +189,31 @@ def preprocess_dataset(dataset):
 
     return dataset, classification_labels, reg_labels 
 
+# Function that optimzies the threshold of the model utalizing g-mean 
 def optimize_threshold(labels, pred_probs):
+    # Set up grid to search
     thresholds = np.linspace(0.01, 0.99, 99)
+    # Init buffer 
     gmeans = []
+    # For every threshold 
     for t in thresholds:
+        # Get preds at that threshold 
         preds = (pred_probs >= t).astype(int)
+        # Calc gmean
         gmeans.append(geometric_mean_score(labels, preds))
+    # Take best threshold 
     best_t = thresholds[np.argmax(gmeans)]
     return best_t
 
+# Stepwise prior classifer 
 def train_prior_cls(model, input_features, cls_labels, reg_labels, n_folds, plot_confusion_matrix=False):
+    # Init cross val 
     cv = StratifiedKFold(n_splits=n_folds, shuffle=True, random_state=seed)
     
+    # Dataset aggregators 
     val_features_all, val_predprobs_all, val_cls_all, val_reg_all = [], [], [], []
     
+    # For each fold 
     for train_idx, val_idx in cv.split(input_features, cls_labels):
         # Get train/val splits
         train_input = input_features[train_idx]
@@ -270,6 +281,7 @@ def train_prior_cls(model, input_features, cls_labels, reg_labels, n_folds, plot
     short_idxs = np.where(val_preds_all == 0)[0]
     return model, metrics, val_features_all[short_idxs], val_reg_all[short_idxs]
 
+# Train and test full model 
 def train_test_model(model, train_features, test_features, train_labels, test_labels):
     # Isolation Forest 
     iso = IsolationForest(contamination="auto", random_state=seed, n_estimators=100)
@@ -432,16 +444,20 @@ if __name__ == '__main__':
     global seed
     seed = 0
 
+    # Configure paths and logger 
     repo_dir = Path(__file__).parent.parent
-    dataset_dir = os.path.join(repo_dir, 'improved_dataset')
+    dataset_dir = os.path.join(repo_dir, 'dataset')
     results_dir = os.path.join(repo_dir, 'results')
     setup_logger(repo_dir)
 
+    # Loading dataset and shuffle 
     dataset = pd.read_csv(os.path.join(dataset_dir, 'mean_dataset.csv'))
     dataset = dataset.sample(frac=1, random_state=seed).reset_index(drop=True)
 
+    # Transform dataset to machine readable
     dataset, cls_labels, reg_labels  = preprocess_dataset(dataset)
 
+    # read in best hyperparameters
     with open(os.path.join(results_dir, "best_cls_hyperparams.json"), "r") as f:
         best_paras_dict = json.load(f)
 
@@ -458,12 +474,14 @@ if __name__ == '__main__':
     # XGBoost
     best_xgb_model = xgb.XGBClassifier(**best_paras_dict['xgb'], tree_method="hist", device="cuda", random_state=seed, verbosity=0)
 
+    # 5 fold cross validation for dataset collection on each model type
     n_folds = 5
     step_cls_logistic_model, logistic_history, logistic_short_features, logistic_short_reg_labels = train_prior_cls(best_logistic_model, dataset.values, cls_labels.values, reg_labels.values, n_folds, plot_confusion_matrix=True)
     step_cls_svm_model, svm_history, svm_short_features, svm_short_reg_labels = train_prior_cls(best_svc_model, dataset.values, cls_labels.values, reg_labels.values, n_folds, plot_confusion_matrix=True)
     step_cls_rf_model, rf_history, rf_short_features, rf_short_reg_labels = train_prior_cls(best_rf_model, dataset.values, cls_labels.values, reg_labels.values, n_folds, plot_confusion_matrix=True)
     step_cls_xgb_model, xbg_history, xgb_short_features, xgb_short_reg_labels = train_prior_cls(best_xgb_model, dataset.values, cls_labels.values, reg_labels.values, n_folds, plot_confusion_matrix=True)
 
+    # Split each dataset that was generated 
     logistic_train_features, logistic_test_features, logistic_train_labels, logistic_test_labels  = train_test_split(logistic_short_features, 
                                                                                                             logistic_short_reg_labels, 
                                                                                                             test_size=0.2,
@@ -484,21 +502,26 @@ if __name__ == '__main__':
                                                                                                 test_size=0.2,
                                                                                                 random_state=seed)
     
+    # Loop through each of the generated dataset perofmring the long regression task on all of them 
     for model_name, train_features, test_features, train_labels, test_labels in zip(['logistic', 'svc', 'rfc', 'xgbc'], [logistic_train_features, svm_train_features, rf_train_features, xgb_train_features], [logistic_test_features, svm_test_features, rf_test_features, xgb_test_features], [logistic_train_labels, svm_train_labels, rf_train_labels, xgb_train_labels], [logistic_test_labels, svm_test_labels, rf_test_labels, xgb_test_labels]):
         n_trials = 128
 
+        # Linear hyperparameter optimziation
         linear_objective = partial(linear_objective, input_features=train_features, reg_labels=train_labels)
         linear_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
         linear_study.optimize(linear_objective, n_trials=n_trials)
 
+        # SVR hyperparameter optimziation
         svr_objective = partial(svr_objective, input_features=train_features, reg_labels=train_labels)
         svr_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
         svr_study.optimize(svr_objective, n_trials=n_trials)
 
+        # RF hyperparameter optimziation
         rf_objective = partial(rf_objective, input_features=train_features, reg_labels=train_labels)
         rf_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
         rf_study.optimize(rf_objective, n_trials=n_trials)
 
+        # XGB hyperparameter optimziation
         xgb_objective = partial(xgb_objective, input_features=train_features, reg_labels=train_labels)
         xbg_study = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
         xbg_study.optimize(xgb_objective, n_trials=n_trials)

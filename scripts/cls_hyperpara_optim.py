@@ -1,14 +1,12 @@
-'''
-Docstring for scripts.cls_hyperpara_optim:
-This file reads in the preprocessed dataset, 
-'''
+"""This is the classification workflow script that transforms the preprocessed dataset to machine readable, splits the data, performs TPE cross-validation, and test the final models.
+This file takes no parameters. 
+"""
 
 # Standard library
 import ast
 import json
 import logging
 import os
-import pickle
 import sys
 from functools import partial
 from pathlib import Path
@@ -390,11 +388,10 @@ def xgb_objective(trial, input_features, labels):
 global seed
 seed = 0
 
-# Configuring repo paths 
+# Configuring repo paths and logger 
 repo_dir = Path(__file__).parent.parent
-dataset_dir = os.path.join(repo_dir, 'improved_dataset')
+dataset_dir = os.path.join(repo_dir, 'dataset')
 results_dir = os.path.join(repo_dir, 'results')
-# Set up Logging 
 setup_logger(repo_dir)
 
 # Reading in dataset 

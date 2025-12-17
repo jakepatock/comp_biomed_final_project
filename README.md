@@ -26,7 +26,7 @@ Extract the zip file utalizing any method you would like. If you are on Linux or
 ```bash
 unzip dataset/mimic-iv-3.1.zip -d dataset/
 ```
-This will results in a directory called mimic-iv-3.1 being created in the dataset directory. This concludes the setting up of the repository. 
+This will results in a directory called mimic-iv-3.1 being created in the dataset directory. Note ensure that unziping does not result in a doubled comp_biomed_final_project/dataset/mimic-iv-3.1/mimic-iv-3.1. It should be comp_biomed_final_project/dataset/mimic-iv-3.1/<general_files_in_mimic_dataset>.  This concludes the setting up of the repository. 
 
 ### 3. Configure Environment
 To ensure compatibility with the dependencies in this project we will install the packages found in the requirements.txt in the root directory. To create this environment, create a new Python environment with Anaconda or any method you prefer. The example below uses Anaconda to initialize a fresh Python 3.11 environment and install the requirments file.
@@ -51,13 +51,19 @@ python scripts/preprocessing_script.py
 This will take around 40 minutes on a pc and will save the preprocessed dataset in the dataset directory in a file called "mean_dataset.csv"
 
 ### 5. Modeling workflows
+NOTE. If you run a file and get an error importing XGBoost library on macOS, try this command 
+```bash
+brew install libomp
+```
+to install the dependency and rerun the file.
+
 This step is the modeling workflow. Figure 3 in the report shows the workflow this script executes. 
 First, we will address the classification task of prediction if the LOS is less than or greater than 4 days.
 Execute this command to rerun this pipeline:
 ```bash
 python scripts/cls_hyperpara_optim.py
 ```
-This workflow will generate files found in the results directory. It will make a json file of the best hyperparameters found for each model in results\best_cls_hyperparams.json and test results in results\cls_results.csv.
+This workflow will generate files found in the results directory. It will make a json file of the best hyperparameters found for each model in results/best_cls_hyperparams.json and test results in results/cls_results.csv.
 
 Second, we will address the short regression task of predicting the continous LOS the subset dataset of 1 <= LOS < 4. To run this pipeline we will use the script called reg_hyperpara_optim.py found in the scripts folder. This file takes on argument called --reg_dataset. If you want do execute the short regression task execute the command:
 ```bash
@@ -75,3 +81,6 @@ Finally, we will run the stepwise workflow. This file takes no arguments and wil
 python scripts/stepwise_modeling.py
 ```
 This workflow will generate the 4 different sets of stepwise regression optimal hyperparameters using the 
+
+### 6. Final Conslusion
+All the results are saved in the reuslts directory found in the final paper.

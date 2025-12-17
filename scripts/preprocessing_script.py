@@ -53,17 +53,17 @@ mimic_dataset_dir = os.path.join(dataset_dir, 'mimic-iv-3.1', 'mimic-iv-3.1')
 agg_function = 'mean'
 
 # Load ICUs stays 
-icu_stays = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu\icustays.csv.gz"))
+icu_stays = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu/icustays.csv.gz"))
 
 # Loading admissions data
-admissions = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp\admissions.csv.gz"))
+admissions = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp/admissions.csv.gz"))
 
 # Filtering people on if they died in the hospital 
 # Joining on admission df to get info if they died in icu 
 deathtime_df = icu_stays.merge(admissions[['subject_id', 'hadm_id', 'hospital_expire_flag', 'admission_type', 'admission_location']], on=['subject_id', 'hadm_id'], how='left')
 
 # Loading patient information table
-patients = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp\patients.csv.gz"))
+patients = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp/patients.csv.gz"))
 
 # Adding demographic data (2.2. Feature Selection)
 age_added = deathtime_df.merge(patients[['subject_id', 'gender', 'anchor_age', 'anchor_year']], on='subject_id', how='left')
@@ -75,7 +75,7 @@ age_added['age'] = age_added['anchor_age'] + (age_added['intime'].dt.year - age_
 age_added = age_added.drop(columns=['anchor_age', 'anchor_year'])
 
 # Loading diagnosis 
-diagnoses = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp\diagnoses_icd.csv.gz"), dtype={ 'subject_id': 'int32', 'hadm_id': 'int32', 'seq_num': 'int16', 'icd_code': 'string', 'icd_version': 'int8'})
+diagnoses = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp/diagnoses_icd.csv.gz"), dtype={ 'subject_id': 'int32', 'hadm_id': 'int32', 'seq_num': 'int16', 'icd_code': 'string', 'icd_version': 'int8'})
 
 # Spliting the dataframe to get all the ICD9 codes 
 icd9 = diagnoses[diagnoses['icd_version'] == 9].copy()
@@ -195,10 +195,10 @@ diagnoses_added['admission_type'] = diagnoses_added.pop('admission_type')
 diagnoses_added['admission_location'] = diagnoses_added.pop('admission_location')
 
 # Loading the tables with the vital values 
-vital_events = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu\chartevents.csv.gz"), usecols=['subject_id', 'hadm_id', 'stay_id', 'itemid', 'charttime', 'valuenum'])
+vital_events = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu/chartevents.csv.gz"), usecols=['subject_id', 'hadm_id', 'stay_id', 'itemid', 'charttime', 'valuenum'])
 
 # Loading dim tables to map id to feature name
-d_vital_items = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu\d_items.csv.gz"))
+d_vital_items = pd.read_csv(os.path.join(mimic_dataset_dir, r"icu/d_items.csv.gz"))
 
 # Specifying what features we are interested in 
 vital_feature_names = ['Heart Rate', 'O2 saturation pulseoxymetry', 'Respiratory Rate', 'Temperature Fahrenheit', 'GCS - Eye Opening', 'GCS - Motor Response', 'GCS - Verbal Response']
@@ -226,10 +226,10 @@ agg_vitals = vitals_added.groupby(['subject_id', 'hadm_id', 'stay_id', 'label'])
 pivot_vitals = agg_vitals.pivot_table(index=['subject_id', 'hadm_id', 'stay_id'], columns='label', values='valuenum').reset_index()
 
 # Loading the tables with the lab values
-lab_events = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp\labevents.csv.gz"), usecols=['subject_id', 'hadm_id', 'itemid', 'charttime', 'valuenum'])
+lab_events = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp/labevents.csv.gz"), usecols=['subject_id', 'hadm_id', 'itemid', 'charttime', 'valuenum'])
 
 # Loading dim tables to map id to feature name
-d_lab_items = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp\d_labitems.csv.gz"))
+d_lab_items = pd.read_csv(os.path.join(mimic_dataset_dir, r"hosp/d_labitems.csv.gz"))
 
 # Specifying what features we are interested in 
 lab_feature_names = ['Anion Gap', 'Bicarbonate', 'Chloride', 'Creatinine', 'Glucose', 'Sodium', 'Magnesium', 'Potassium', 'Phosphate', 'Urea Nitrogen', 'Hematocrit', 'Hemoglobin', 'MCH', 'MCHC', 'MCV', 'RDW', 'Red Blood Cells', 'White Blood Cells', 'Platelet Count']

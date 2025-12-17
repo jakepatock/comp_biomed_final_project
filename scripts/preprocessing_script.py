@@ -47,7 +47,7 @@ def make_figure_one(icu_stays_with_data):
 repo_dir = Path(__file__).parent.parent
 dataset_dir = os.path.join(repo_dir, 'dataset')
 
-mimic_dataset_dir = os.path.join(dataset_dir, 'mimic-iv-3.1', 'mimic-iv-3.1')
+mimic_dataset_dir = os.path.join(dataset_dir, 'mimic-iv-3.1')
 
 # Aggregation function we will use to sumarize multiple reading of same feature 
 agg_function = 'mean'

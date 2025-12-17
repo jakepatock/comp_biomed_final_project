@@ -38,10 +38,7 @@ conda create -n comp_biomed python=3.11 -y
 # 2. Activate the new environment
 conda activate comp_biomed
 
-# 3. Navigate to the project root directory (where requirements.txt is located)
-cd "C:\Visual Studio Coding\comp_biomed_final_project"
-
-# 4. Install all packages from requirements.txt
+# 3. Install all packages from requirements.txt
 pip install -r requirements.txt
 ```
 

@@ -5,7 +5,7 @@ This repository contains the workflow for replicating and extending the analyses
 
 
 ## Replication Instructions
-Note the instruction are desinged for replicaiton on a PC. This was trained on a HPC cluster do you can utalize the slurm files to run the jobs as well but you have to change them to configure to your specific HPC.
+Note: the instruction are desinged for replicaiton on a PC. This was trained on a HPC cluster do you can utalize the slurm files to run the jobs as well but you have to change them to configure to your specific HPC.
 ### 1. Obtain Dataset
 The dataset required for this project is available at the following OneDrive link:  
 [Download Dataset](https://1drv.ms/u/c/3b10ceb52a1a5357/IQAEsw_gKL0mQoc4Pf_lEjY1AXF1ssJOb8UMiVpPra1l1io?e=TZY5vy)
